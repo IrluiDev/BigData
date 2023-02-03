@@ -1,0 +1,48 @@
+data("MovieLens")
+Dividir el conjunto de datos en un conjunto de entrenamiento y un conjunto de prueba:
+split = sample(nrow(MovieLens), nrow(MovieLens) * 0.7)
+train_data = MovieLens[split, ]
+test_data = MovieLens[-split, ]
+Preprocesar los datos:
+# Preprocessing the data for training
+train_matrix = dlm(train_data, row.names = NULL, item.name = "item", user.name = "user")
+
+# Preprocessing the data for testing
+test_matrix = dlm(test_data, row.names = NULL, item.name = "item", user.name = "user")
+Entrenar un modelo de recomendación utilizando regresión lineal:
+library(Matrix)
+library(tidyverse)
+
+# Fit a linear regression model
+model_linear = sparse_reg(train_matrix)
+
+# Make predictions on the test data
+pred_linear = predict(model_linear, newdata = test_matrix)
+
+Entrenar un modelo de recomendación utilizando árboles de decisión:
+library(rpart)
+
+# Fit a decision tree model
+model_tree = rpart(train_data[, 3] ~ train_data[, 1] + train_data[, 2])
+
+# Make predictions on the test data
+pred_tree = predict(model_tree, test_data[, 1:2])
+
+Entrenar un modelo de recomendación utilizando redes neuronales:
+library(neuralnet)
+
+# Fit a neural network model
+model_nn = neuralnet(train_data[, 3] ~ train_data[, 1] + train_data[, 2], hidden = 1)
+
+# Make predictions on the test data
+pred_nn = compute(model_nn, test_data[, 1:2])$net.result
+
+Evaluar los modelos de recomendación:
+# Evaluation for linear regression model
+rmse_linear = sqrt(mean((test_data[, 3] - pred_linear)^2))
+
+# Evaluation for decision tree model
+rmse_tree = sqrt(mean((test_data[, 3] - pred_tree)^2))
+
+# Evaluation for neural network model
+rmse_nn = sqrt(mean((test_data[, 3] - pred_nn)^2))
